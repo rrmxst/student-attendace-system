@@ -23,6 +23,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+
 
 // Server
 const PORT = process.env.PORT || 3000;
