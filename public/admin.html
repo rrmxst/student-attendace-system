@@ -3,33 +3,98 @@
 <head>
   <title>Admin - QR Scanner</title>
   <style>
-    body { font-family: sans-serif; background: #e6f7ff; text-align: center; padding-top: 50px; }
-    #reader { width: 300px; margin: auto; }
-    #result { margin-top: 20px; font-weight: bold; color: green; }
+    body {
+      font-family: sans-serif;
+      background: #e6f7ff;
+      text-align: center;
+      padding-top: 50px;
+    }
+    #reader {
+      width: 300px;
+      margin: auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+    #loginSection {
+      display: block;
+    }
+    #scannerSection {
+      display: none;
+    }
+    input[type="password"] {
+      padding: 8px;
+      width: 200px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-<h2>Scan QR to Mark Attendance</h2>
-<div id="reader"></div>
-<div id="result"></div>
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-function onScanSuccess(decodedText) {
-  fetch('/api/attendance/mark', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ rollNumber: decodedText })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('result').innerText = data.message || "Marked!";
-  })
-  .catch(() => {
-    document.getElementById('result').innerText = "Error marking attendance.";
-  });
-}
-const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-scanner.render(onScanSuccess);
-</script>
+  <h2>Admin Login</h2>
+  <div id="loginSection">
+    <input type="password" id="adminPassword" placeholder="Enter admin password" />
+    <br>
+    <button onclick="login()">Login</button>
+    <div id="loginResult" style="color:red; margin-top:10px;"></div>
+  </div>
+
+  <div id="scannerSection">
+    <h2>Scan QR to Mark Attendance</h2>
+    <div id="reader"></div>
+    <div id="result"></div>
+    <button onclick="exportCSV()">📁 Export Attendance CSV</button>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    function login() {
+      const password = document.getElementById('adminPassword').value;
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('scannerSection').style.display = 'block';
+        startScanner();
+      })
+      .catch(() => {
+        document.getElementById('loginResult').innerText = '❌ Wrong password!';
+      });
+    }
+
+    function startScanner() {
+      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      scanner.render((decodedText) => {
+        fetch('/api/attendance/mark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rollNumber: decodedText })
+        })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('result').innerText = data.message || "Marked!";
+        })
+        .catch(() => {
+          document.getElementById('result').innerText = "Error marking attendance.";
+        });
+      });
+    }
+
+    function exportCSV() {
+      window.location.href = '/api/admin/export';
+    }
+  </script>
 </body>
 </html>
