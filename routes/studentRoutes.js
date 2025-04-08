@@ -9,11 +9,13 @@ router.post('/register', async (req, res) => {
     const existing = await Student.findOne({ rollNumber });
     if (existing) return res.status(400).json({ error: "Student already registered" });
 
-    const newStudent = await Student.create({ name, rollNumber });
-    const qrCode = await QRCode.toDataURL(rollNumber);
-    res.json({ qrCode });
+    const qrData = JSON.stringify({ name, rollNumber }); // include both in QR
+    const qrCode = await QRCode.toDataURL(qrData);
+
+    const newStudent = await Student.create({ name, rollNumber, qrCode });
+    res.json({ message: "✅ Registered", qrCode });
   } catch (err) {
-    res.status(500).json({ error: "Registration failed" });
+    res.status(500).json({ error: "❌ Registration failed" });
   }
 });
 
