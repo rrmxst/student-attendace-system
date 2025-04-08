@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
+const { Parser } = require('json2csv'); // ✅ Place this ONCE at the top
 
-// POST: Mark attendance
+// ✅ POST: Mark attendance
 router.post('/mark', async (req, res) => {
   const { rollNumber } = req.body;
   if (!rollNumber) return res.status(400).json({ message: "Invalid QR code" });
@@ -33,23 +34,22 @@ router.get('/all', async (req, res) => {
   }
 });
 
-module.exports = router;
-const { Parser } = require('json2csv');
-
-// ✅ GET: Export attendance as CSV
+// ✅ GET: Export attendance data as CSV
 router.get('/export', async (req, res) => {
   try {
-    const records = await Attendance.find().sort({ timestamp: -1 });
-
-    const fields = ['name', 'rollNumber', 'timestamp'];
+    const records = await Attendance.find().lean();
+    const fields = ['rollNumber', 'date', 'timestamp'];
     const opts = { fields };
     const parser = new Parser(opts);
     const csv = parser.parse(records);
 
     res.header('Content-Type', 'text/csv');
     res.attachment('attendance.csv');
-    return res.send(csv);
+    res.send(csv);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to export CSV", error: err.message });
   }
 });
+
+module.exports = router;
+
