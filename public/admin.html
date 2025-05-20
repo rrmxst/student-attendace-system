@@ -106,8 +106,8 @@
     }
 
     function exportCSV() {
-      // ✅ Export CSV for this scanner ID only
-      window.location.href = `/api/admin/export?scannerId=${SCANNER_ID}`;
+      // ✅ Export CSV for this scanner ID only, calling the correct route
+      window.location.href = `/api/attendance/export?scannerId=${SCANNER_ID}`;
     }
   </script>
 </body>
