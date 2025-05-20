@@ -18,15 +18,13 @@
       font-weight: bold;
       color: green;
     }
-    input[type="password"], input[type="text"] {
-      padding: 8px;
-      width: 200px;
-      margin: 5px;
-    }
-    button {
-      padding: 10px 15px;
+    input, button {
+      padding: 10px;
       margin: 10px;
-      cursor: pointer;
+      width: 200px;
+    }
+    #loginSection, #scannerIdSection {
+      display: block;
     }
     #scannerSection {
       display: none;
@@ -35,12 +33,16 @@
 </head>
 <body>
   <h2>Admin Login</h2>
-
   <div id="loginSection">
     <input type="password" id="adminPassword" placeholder="Enter admin password" /><br>
-    <input type="text" id="scannerIdInput" placeholder="Enter scanner/device ID" /><br>
     <button onclick="login()">Login</button>
     <div id="loginResult" style="color:red; margin-top:10px;"></div>
+  </div>
+
+  <div id="scannerIdSection" style="display:none;">
+    <h3>Enter Scanner ID (like scanner1, scanner2)</h3>
+    <input type="text" id="scannerIdInput" placeholder="Enter scanner ID" /><br>
+    <button onclick="startScanner()">Start Scanner</button>
   </div>
 
   <div id="scannerSection">
@@ -52,19 +54,10 @@
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
-    let SCANNER_ID = null;
+    let SCANNER_ID = "";
 
     function login() {
       const password = document.getElementById('adminPassword').value;
-      const scannerInput = document.getElementById('scannerIdInput').value.trim();
-
-      if (!scannerInput) {
-        document.getElementById('loginResult').innerText = '❌ Enter scanner/device ID!';
-        return;
-      }
-
-      SCANNER_ID = scannerInput;
-
       fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,10 +67,9 @@
         if (!res.ok) throw new Error("Unauthorized");
         return res.json();
       })
-      .then(() => {
+      .then(data => {
         document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('scannerSection').style.display = 'block';
-        startScanner();
+        document.getElementById('scannerIdSection').style.display = 'block';
       })
       .catch(() => {
         document.getElementById('loginResult').innerText = '❌ Wrong password!';
@@ -85,6 +77,15 @@
     }
 
     function startScanner() {
+      SCANNER_ID = document.getElementById('scannerIdInput').value.trim();
+      if (!SCANNER_ID) {
+        alert("Please enter a scanner ID");
+        return;
+      }
+
+      document.getElementById('scannerIdSection').style.display = 'none';
+      document.getElementById('scannerSection').style.display = 'block';
+
       const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
       scanner.render((decodedText) => {
         try {
@@ -114,12 +115,7 @@
     }
 
     function exportCSV() {
-      if (!SCANNER_ID) {
-        alert("Scanner ID not set!");
-        return;
-      }
-
-      window.location.href = `/api/admin/export?scannerId=${SCANNER_ID}`;
+      window.location.href = `/api/attendance/export?scannerId=${SCANNER_ID}`;
     }
   </script>
 </body>
