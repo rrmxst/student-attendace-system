@@ -97,6 +97,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              name: data.name,
               rollNumber: data.rollNumber,
               scannerId: SCANNER_ID
             })
