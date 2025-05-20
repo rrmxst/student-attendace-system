@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
-const { Parser } = require('json2csv'); // ✅ Place this ONCE at the top
+const { Parser } = require('json2csv');
 
 // ✅ POST: Mark attendance
 router.post('/mark', async (req, res) => {
-  const { rollNumber } = req.body;
-  if (!rollNumber) return res.status(400).json({ message: "Invalid QR code" });
+  const { rollNumber, scannerId } = req.body;
+
+  if (!rollNumber) {
+    return res.status(400).json({ message: "Invalid QR code" });
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -20,7 +23,12 @@ router.post('/mark', async (req, res) => {
     return res.status(400).json({ message: "Already marked today" });
   }
 
-  const attendance = await Attendance.create({ rollNumber });
+  const attendance = await Attendance.create({
+    rollNumber,
+    scannerId: scannerId || "default",
+    timestamp: new Date()
+  });
+
   res.json({ message: "Attendance marked successfully", attendance });
 });
 
@@ -34,17 +42,21 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// ✅ GET: Export attendance data as CSV
+// ✅ GET: Export attendance data as CSV (by scannerId)
 router.get('/export', async (req, res) => {
+  const scannerId = req.query.scannerId || "default";
+
   try {
-    const records = await Attendance.find().lean();
-    const fields = ['rollNumber', 'date', 'timestamp'];
+    const records = await Attendance.find({ scannerId }).lean();
+    const fields = ['rollNumber', 'timestamp', 'scannerId'];
     const opts = { fields };
     const parser = new Parser(opts);
     const csv = parser.parse(records);
 
+    const filename = `${scannerId}_attendance.csv`;
+
     res.header('Content-Type', 'text/csv');
-    res.attachment('attendance.csv');
+    res.attachment(filename);
     res.send(csv);
   } catch (err) {
     res.status(500).json({ message: "Failed to export CSV", error: err.message });
@@ -52,4 +64,5 @@ router.get('/export', async (req, res) => {
 });
 
 module.exports = router;
+
 
