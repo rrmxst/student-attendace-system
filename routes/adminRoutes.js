@@ -14,19 +14,26 @@ router.post('/login', (req, res) => {
 });
 
 // GET: Export Attendance as CSV
-router.get('/export', async (req, res) => {
-  try {
-    const records = await Attendance.find().lean();
-    const parser = new Parser({ fields: ['rollNumber', 'timestamp'] });
-    const csv = parser.parse(records);
+router.get("/export", async (req, res) => {
+  const scannerId = req.query.scannerId || "default";
 
-    res.header('Content-Type', 'text/csv');
-    res.attachment('attendance.csv');
-    return res.send(csv);
+  try {
+    const data = await Attendance.find({ scannerId });
+
+    const csv = parse(data, {
+      fields: ["name", "roll", "time", "scannerId"],
+    });
+
+    const fileName = `${scannerId}_attendance.csv`;
+
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Type", "text/csv");
+
+    res.status(200).end(csv);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error generating CSV" });
+    res.status(500).json({ message: "Error exporting attendance", err });
   }
 });
+
 
 module.exports = router;
