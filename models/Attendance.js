@@ -1,11 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const AttendanceSchema = new mongoose.Schema({
-  rollNumber: String,
-  date: {
+const attendanceSchema = new mongoose.Schema({
+  name: String,
+  roll: String,
+  time: {
     type: Date,
-    default: Date.now
+    default: Date.now, // saves timestamp
+  },
+  scannerId: {
+    type: String,
+    default: "default", // tracks which device scanned it
   }
 });
 
-module.exports = mongoose.model('Attendance', AttendanceSchema);
+module.exports = mongoose.model("Attendance", attendanceSchema);
