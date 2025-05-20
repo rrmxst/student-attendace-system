@@ -53,6 +53,8 @@
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
+    const SCANNER_ID = 'scanner1'; // 🔁 CHANGE this per device (e.g., 'scanner2')
+
     function login() {
       const password = document.getElementById('adminPassword').value;
       fetch('/api/admin/login', {
@@ -85,7 +87,10 @@
           fetch('/api/attendance/mark', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rollNumber: data.rollNumber })
+            body: JSON.stringify({
+              rollNumber: data.rollNumber,
+              scannerId: SCANNER_ID  // ✅ Send scannerId
+            })
           })
           .then(res => res.json())
           .then(data => {
@@ -101,7 +106,8 @@
     }
 
     function exportCSV() {
-      window.location.href = '/api/admin/export';
+      // ✅ Export CSV for this scanner ID only
+      window.location.href = `/api/admin/export?scannerId=${SCANNER_ID}`;
     }
   </script>
 </body>
