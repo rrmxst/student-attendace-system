@@ -31,8 +31,10 @@ router.get("/export", async (req, res) => {
 
     res.status(200).end(csv);
   } catch (err) {
-    res.status(500).json({ message: "Error exporting attendance", err });
+    console.error("CSV Export Error:", err); // ✅ Log the real error
+    res.status(500).json({ message: "Error exporting attendance", err: err.message });
   }
+
 });
 
 
