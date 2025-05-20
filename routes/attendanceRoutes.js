@@ -48,10 +48,14 @@ router.get('/export', async (req, res) => {
 
   try {
     const records = await Attendance.find({ scannerId }).lean();
+
+    if (!records || records.length === 0) {
+      return res.status(404).json({ message: "No attendance data found for this scanner." });
+    }
+
     const fields = ['rollNumber', 'timestamp', 'scannerId'];
-    const opts = { fields };
-    const parser = new Parser(opts);
-    const csv = parser.parse(records);
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(records);
 
     const filename = `${scannerId}_attendance.csv`;
 
@@ -59,10 +63,9 @@ router.get('/export', async (req, res) => {
     res.attachment(filename);
     res.send(csv);
   } catch (err) {
+    console.error("CSV Export Error:", err); // 👈 will show in Render logs
     res.status(500).json({ message: "Failed to export CSV", error: err.message });
   }
 });
 
 module.exports = router;
-
-
