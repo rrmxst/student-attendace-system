@@ -5,7 +5,7 @@ const { Parser } = require('json2csv');
 
 // ✅ POST: Mark attendance
 router.post('/mark', async (req, res) => {
-  const { rollNumber, scannerId } = req.body;
+  const { name, rollNumber, scannerId } = req.body;
 
   if (!rollNumber) {
     return res.status(400).json({ message: "Invalid QR code" });
@@ -24,6 +24,7 @@ router.post('/mark', async (req, res) => {
   }
 
   const attendance = await Attendance.create({
+    name,
     rollNumber,
     scannerId: scannerId || "default",
     timestamp: new Date()
