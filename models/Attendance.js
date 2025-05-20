@@ -1,16 +1,14 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
-  name: String,
-  roll: String,
-  time: {
-    type: Date,
-    default: Date.now, // saves timestamp
-  },
-  scannerId: {
-    type: String,
-    default: "default", // tracks which device scanned it
-  }
+  rollNumber: { type: String, required: true },
+  scannerId: { type: String, default: 'default' }, // ✅ Add this
+  timestamp: { type: Date, default: Date.now },    // ✅ Add this
+  date: { type: Date, default: () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }}
 });
 
-module.exports = mongoose.model("Attendance", attendanceSchema);
+module.exports = mongoose.model('Attendance', attendanceSchema);
