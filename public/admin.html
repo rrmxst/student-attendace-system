@@ -18,28 +18,27 @@
       font-weight: bold;
       color: green;
     }
-    #loginSection {
-      display: block;
-    }
-    #scannerSection {
-      display: none;
-    }
-    input[type="password"] {
+    input[type="password"], input[type="text"] {
       padding: 8px;
       width: 200px;
+      margin: 5px;
     }
     button {
       padding: 10px 15px;
       margin: 10px;
       cursor: pointer;
     }
+    #scannerSection {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h2>Admin Login</h2>
+
   <div id="loginSection">
-    <input type="password" id="adminPassword" placeholder="Enter admin password" />
-    <br>
+    <input type="password" id="adminPassword" placeholder="Enter admin password" /><br>
+    <input type="text" id="scannerIdInput" placeholder="Enter scanner/device ID" /><br>
     <button onclick="login()">Login</button>
     <div id="loginResult" style="color:red; margin-top:10px;"></div>
   </div>
@@ -53,10 +52,19 @@
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
-    const SCANNER_ID = 'scanner1'; // 🔁 CHANGE this per device (e.g., 'scanner2')
+    let SCANNER_ID = null;
 
     function login() {
       const password = document.getElementById('adminPassword').value;
+      const scannerInput = document.getElementById('scannerIdInput').value.trim();
+
+      if (!scannerInput) {
+        document.getElementById('loginResult').innerText = '❌ Enter scanner/device ID!';
+        return;
+      }
+
+      SCANNER_ID = scannerInput;
+
       fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,7 +74,7 @@
         if (!res.ok) throw new Error("Unauthorized");
         return res.json();
       })
-      .then(data => {
+      .then(() => {
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('scannerSection').style.display = 'block';
         startScanner();
@@ -89,7 +97,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               rollNumber: data.rollNumber,
-              scannerId: SCANNER_ID  // ✅ Send scannerId
+              scannerId: SCANNER_ID
             })
           })
           .then(res => res.json())
@@ -106,8 +114,12 @@
     }
 
     function exportCSV() {
-      // ✅ Export CSV for this scanner ID only, calling the correct route
-      window.location.href = `/api/attendance/export?scannerId=${SCANNER_ID}`;
+      if (!SCANNER_ID) {
+        alert("Scanner ID not set!");
+        return;
+      }
+
+      window.location.href = `/api/admin/export?scannerId=${SCANNER_ID}`;
     }
   </script>
 </body>
