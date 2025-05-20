@@ -50,13 +50,23 @@ router.get('/export', async (req, res) => {
   try {
     const records = await Attendance.find({ scannerId }).lean();
 
-    if (!records || records.length === 0) {
-      return res.status(404).json({ message: "No attendance data found for this scanner." });
-    }
+    const formattedRecords = records.map(record => {
+      const dateObj = new Date(record.timestamp);
+      const time = dateObj.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const date = dateObj.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
 
-    const fields = ['rollNumber', 'timestamp', 'scannerId'];
-    const json2csvParser = new Parser({ fields });
-    const csv = json2csvParser.parse(records);
+      return {
+        name: record.name || "",
+        rollNumber: record.rollNumber,
+        time,
+        date,
+        scannerId: record.scannerId
+      };
+    });
+
+    const fields = ['name', 'rollNumber', 'time', 'date', 'scannerId'];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(formattedRecords);
 
     const filename = `${scannerId}_attendance.csv`;
 
@@ -64,9 +74,9 @@ router.get('/export', async (req, res) => {
     res.attachment(filename);
     res.send(csv);
   } catch (err) {
-    console.error("CSV Export Error:", err); // 👈 will show in Render logs
     res.status(500).json({ message: "Failed to export CSV", error: err.message });
   }
 });
+
 
 module.exports = router;
